@@ -7,38 +7,49 @@ import (
 	"net/http"
 )
 
-func main() {
-	initializeServer()
+type Server struct {
+	Router *chi.Mux
 }
 
-func initializeServer() {
-	fmt.Println("Starting server on port :3333")
+func main() {
+	s := CreateNewServer()
+	s.MountHandlers()
 
-	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Get("/hello-world", func(w http.ResponseWriter, r *http.Request) {
-		helloWorld(w)
-	})
+	err := http.ListenAndServe(":3333", s.Router)
 
-	err := http.ListenAndServe(":3333", r)
 	if err != nil {
 		fmt.Println(err)
+
 		return
 	}
+}
+
+func CreateNewServer() *Server {
+	s := &Server{}
+	s.Router = chi.NewRouter()
+
+	return s
+}
+
+func (s *Server) MountHandlers() {
+	s.Router.Use(middleware.Logger)
+
+	s.Router.Get("/hello-world", HelloWorld)
 }
 
 func writeMessage(w http.ResponseWriter, message string) {
 	_, err := w.Write([]byte(message))
+
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 }
 
-func helloWorld(w http.ResponseWriter) {
+func HelloWorld(w http.ResponseWriter, r *http.Request) {
 	// String to return
 	s := "Hello, World!"
 
 	writeMessage(w, s)
-	fmt.Println(s)
+	// fmt.Println(s)
 }
